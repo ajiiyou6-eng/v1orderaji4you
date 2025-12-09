@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel — XINNDESAINER</title>
+
+<!-- ======= STYLE TEMA RGB ======= -->
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #020006;
+  color: white;
+}
+
+/* animasi rgb */
+@keyframes rgbFlow {
+  0%   { box-shadow: 0 0 20px #ff0099; }
+  25%  { box-shadow: 0 0 20px #00eaff; }
+  50%  { box-shadow: 0 0 20px #7aff00; }
+  75%  { box-shadow: 0 0 20px #ffae00; }
+  100% { box-shadow: 0 0 20px #ff0099; }
+}
+
+.panel {
+  max-width: 1000px;
+  margin: 40px auto;
+  background: rgba(255,255,255,0.05);
+  padding: 20px;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  animation: rgbFlow 4s infinite linear;
+}
+
+/* tombol */
+.btn {
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  background: linear-gradient(90deg, cyan, magenta);
+  color: black;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.07);
+  border: none;
+  color: white;
+}
+
+.card {
+  background: rgba(255,255,255,0.07);
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginBox" class="panel" style="max-width:400px;">
+  <h2>Login Admin</h2>
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+  <br><br>
+  <button class="btn" onclick="login()">Login</button>
+</div>
+
+<!-- PANEL ADMIN -->
+<div id="adminPanel" class="panel" style="display:none;">
+
+  <h2>Admin Panel — XINNDESAINER</h2>
+
+  <button class="btn" onclick="logout()" style="float:right">Logout</button>
+
+  <hr><br>
+
+  <h3>⭐ Atur Harga Desain Logo</h3>
+  <input id="exp" placeholder="Harga Express">
+  <input id="basic" placeholder="Harga Basic">
+  <input id="prem" placeholder="Harga Premium">
+  <button class="btn" onclick="saveLogo()">Simpan Harga Logo</button>
+
+  <hr><br>
+
+  <h3>⭐ Atur Harga Website</h3>
+  <input id="landing" placeholder="Harga Landing Page">
+  <input id="toko" placeholder="Harga Toko Online">
+  <input id="port" placeholder="Harga Portfolio">
+  <input id="company" placeholder="Harga Company Profile">
+  <button class="btn" onclick="saveWeb()">Simpan Harga Website</button>
+
+  <hr><br>
+
+  <h3>📦 Portfolio</h3>
+  <input id="pUrl" placeholder="URL Gambar">
+  <button class="btn" onclick="addPortfolio()">Tambah Portfolio</button>
+
+  <div id="portfolioList"></div>
+
+  <hr><br>
+
+  <h3>💬 Testimoni</h3>
+  <input id="tNama" placeholder="Nama">
+  <textarea id="tMsg" placeholder="Pesan"></textarea>
+  <button class="btn" onclick="addTesti()">Tambah Testimoni</button>
+
+  <div id="testiList"></div>
+
+  <hr><br>
+
+  <h3>🛒 Pesanan Masuk</h3>
+  <div id="orderList"></div>
+
+</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+/* FIREBASE CONFIG BARU (PUNYA ANDA) */
+const firebaseConfig = {
+  apiKey: "AIzaSyDauPsU0BPXecmxgRt_tyjbdzE3jfxfy68",
+  authDomain: "panel-4934a.firebaseapp.com",
+  databaseURL: "https://panel-4934a-default-rtdb.firebaseio.com",
+  projectId: "panel-4934a",
+  storageBucket: "panel-4934a.firebasestorage.app",
+  messagingSenderId: "182694859399",
+  appId: "1:182694859399:web:a8287997928b6c82781e22",
+  measurementId: "G-YW3X8HCDZ0"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ========== LOGIN ADMIN ========== */
+function login() {
+  if (user.value === "Admin" && pass.value === "Admin123") {
+    localStorage.setItem("admin", "1");
+    showAdmin();
+  } else {
+    alert("Login gagal");
+  }
+}
+function logout() {
+  localStorage.removeItem("admin");
+  location.reload();
+}
+if (localStorage.getItem("admin")) showAdmin();
+
+function showAdmin() {
+  loginBox.style.display = "none";
+  adminPanel.style.display = "block";
+  loadAll();
+}
+
+/* ========== SIMPAN HARGA LOGO ========== */
+function saveLogo() {
+  db.ref("web/harga").set({
+    express: exp.value,
+    basic: basic.value,
+    premium: prem.value
+  });
+  alert("Harga logo disimpan!");
+}
+
+/* ========== SIMPAN HARGA WEBSITE ========== */
+function saveWeb() {
+  db.ref("web/hargaWeb").set({
+    landing: landing.value,
+    toko: toko.value,
+    portfolio: port.value,
+    company: company.value
+  });
+  alert("Harga website disimpan!");
+}
+
+/* ========== PORTFOLIO ========== */
+function addPortfolio() {
+  if (!pUrl.value) return alert("Masukkan URL");
+  db.ref("web/portfolio").push(pUrl.value);
+  pUrl.value = "";
+}
+
+db.ref("web/portfolio").on("value", snap => {
+  const data = snap.val() || {};
+  portfolioList.innerHTML = "";
+
+  Object.entries(data).forEach(([id, url]) => {
+    portfolioList.innerHTML += `
+      <div class="card">
+        <img src="${url}" width="120">
+        <button class="btn" onclick="hapusPortfolio('${id}')">Hapus</button>
+      </div>`;
+  });
+});
+
+function hapusPortfolio(id) {
+  db.ref("web/portfolio/"+id).remove();
+}
+
+/* ========== TESTIMONI ========== */
+function addTesti() {
+  db.ref("web/testimoni").push({
+    nama: tNama.value,
+    pesan: tMsg.value
+  });
+  tNama.value = "";
+  tMsg.value = "";
+}
+
+db.ref("web/testimoni").on("value", snap => {
+  const data = snap.val() || {};
+  testiList.innerHTML = "";
+  Object.values(data).forEach(t => {
+    testiList.innerHTML += `
+      <div class="card">
+        <b>${t.nama}</b>
+        <p>${t.pesan}</p>
+      </div>`;
+  });
+});
+
+/* ========== PESANAN ========== */
+db.ref("ordersWebsite").on("value", snap => {
+  const data = snap.val() || {};
+  orderList.innerHTML = "";
+
+  Object.entries(data).forEach(([id, o]) => {
+    orderList.innerHTML += `
+      <div class="card">
+        <b>${o.nama}</b> - ${o.brand}<br>
+        Paket: ${o.paket}<br><br>
+        <button class="btn" onclick="hapusOrder('${id}')">Hapus</button>
+      </div>`;
+  });
+});
+
+function hapusOrder(id) {
+  db.ref("ordersWebsite/"+id).remove();
+}
+
+/* LOAD SEMUA DATA DI AWAL */
+function loadAll() {
+  db.ref("web/harga").once("value", s => {
+    const d = s.val() || {};
+    exp.value = d.express || "";
+    basic.value = d.basic || "";
+    prem.value = d.premium || "";
+  });
+
+  db.ref("web/hargaWeb").once("value", s => {
+    const d = s.val() || {};
+    landing.value = d.landing || "";
+    toko.value = d.toko || "";
+    port.value = d.portfolio || "";
+    company.value = d.company || "";
+  });
+}
+</script>
+
+</body>
+</html>
